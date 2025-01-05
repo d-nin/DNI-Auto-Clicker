@@ -1,0 +1,5 @@
+Click the "Press {key} to click" button to acess the Shortcut Setting screen, then click in the "Click / Stop" button and press any key to bind it.
+Press the bindend key and start clicking, press the key again to stop clicking.
+
+Known Bugs:
+Multiple clicking in the "Click / Stop" button on the Shortcut Setting screen breaks the program.
