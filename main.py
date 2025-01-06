@@ -26,22 +26,27 @@ class Clicker(Thread):
 class Shortcut(Thread):
     def __init__(self):
         super(Shortcut, self).__init__()
-        self.pressed_key = None
+        self.binding = False
+        self.listener = None
 
     def run(self):
         def on_press(key):
-            self.pressed_key = key
             if clicker_thread.program_running:
+                global click_key
                 if str(key) == str(click_key):
                     clicker_thread.running = not clicker_thread.running
                 
                 if str(key) == 'Key.page_down':
                     clicker_thread.exit_program()
+                
+                if self.binding:
+                    click_key = key
+                    self.binding = False
             return key
 
-        listener = keyboard.Listener(on_press=on_press)
-        listener.start()
-        listener.join()
+        self.listener = keyboard.Listener(on_press=on_press)
+        self.listener.start()
+        self.listener.join()
 
 click_key = 'Key.page_up'
 clicker_thread = Clicker()
@@ -72,14 +77,22 @@ class NewWindow():
     def on_close(self):
         self.window.destroy()
         windows.remove(self.title)
+        if self.title == 'AutoClicker':
+            clicker_thread.running = False
+            clicker_thread.program_running = False
+            if shortcut_thread.listener != None:
+                shortcut_thread.listener.stop()
+        if shortcut_thread.binding:
+            text.after_cancel(update)
 
 def shortcut_setting():
     global win2
     global text
+    global win2button
     if windows.count('Shortcut Setting') == 0:
         win2 = NewWindow(250, 100, 'Shortcut Setting')
-        button = tk.Button(win2.window, text='Click / Stop', command=shortcut_changer, height=2)
-        button.place(relx=0.25, rely=0.5, anchor='center', width=100)
+        win2button = tk.Button(win2.window, text='Click / Stop', command=shortcut_changer, height=2)
+        win2button.place(relx=0.25, rely=0.5, anchor='center', width=100)
         text = tk.Text(win2.window, height=2, font=8)
         text.tag_configure('tag_name', justify='center')
         text.insert(tk.END, str(click_key).replace("'", '').upper())
@@ -89,15 +102,21 @@ def shortcut_setting():
 
 def shortcut_changer():
     win2.window.focus_set()
-    global click_key
-    shortcut_thread.pressed_key = None
-    while shortcut_thread.pressed_key == None:
-        click_key = shortcut_thread.pressed_key
+    shortcut_thread.binding = True
+    update_text()
+    win2button.config(state='disabled')
+
+def update_text():
+    global update
     button.config(text=f'Press {str(click_key).replace("'", '').upper()} to click')
     text.delete('1.0', tk.END)
     text.tag_configure('tag_name', justify='center')
     text.insert(tk.END, str(click_key).replace("'", '').upper())
     text.tag_add('tag_name', '1.0', 'end')
+    update = text.after(500, update_text)
+    if shortcut_thread.binding == False:
+        text.after_cancel(update)
+        win2button.config(state='normal')
 
 def open_help():
     open('help.txt')
@@ -109,9 +128,10 @@ button2 = tk.Button(win.window, text='Help >>', command=open_help)
 button2.place(relx=0.5, rely=0.75, anchor='center', height=40, width=240)
 icon = tk.PhotoImage(file='icon.png')
 win.window.iconphoto(True, icon)
-text = ''
 
 def win2_close():
     win2.window.protocol('WM_DELETE_WINDOW', win2.on_close)
+
+win.window.protocol('WM_DELETE_WINDOW', win.on_close)
 
 win.window.mainloop()

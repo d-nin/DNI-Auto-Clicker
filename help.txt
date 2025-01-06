@@ -2,4 +2,5 @@ Click the "Press {key} to click" button to acess the Shortcut Setting screen, th
 Press the bindend key and start clicking, press the key again to stop clicking.
 
 Known Bugs:
-Multiple clicking in the "Click / Stop" button on the Shortcut Setting screen breaks the program.
+Multiple clicking in the "Click / Stop" button on the Shortcut Setting screen breaks the program. FIXED
+Closing the main window doesn't close all windows.
